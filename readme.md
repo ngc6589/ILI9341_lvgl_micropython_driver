@@ -2,7 +2,7 @@
 Micropython bindings to LVGL for Embedded devices, Unix and JavaScript https://github.com/lvgl/lv_micropython の Raspberry Pi Pico 用 ILI9341 汎用ドライバです。
 
 # 参考資料  
-eudoxos さん (https://github.com/eudoxos) 作成の ST7789 用ドライバを修正して作成しました。MITライセンスで公開されていますので、こちらのファイルも MIT ライセンスとします。
+eudoxos さん (https://github.com/eudoxos) 作成の ST7789 用ドライバを修正して作成しました。MITライセンスで公開されていますので、こちらのファイルも MIT ライセンスとします。  
 https://github.com/lvgl/lv_binding_micropython/blob/master/driver/generic/st77xx.py  
 https://github.com/lvgl/lv_binding_micropython/blob/master/driver/generic/xpt2046.py  
 
@@ -19,7 +19,7 @@ DMA はサポート出来ていません。コメントアウトしてます。
 ILI9341 Generic Driver for Raspberry Pi Pico in Micropython bindings to LVGL for Embedded devices, Unix and JavaScript https://github.com/lvgl/lv_micropython .
 
 # References  
-This is a modified version of the driver for ST7789 by eudoxos (https://github.com/eudoxos). Since it is released under MIT license, this file is also MIT licensed.
+This is a modified version of the driver for ST7789 by eudoxos (https://github.com/eudoxos). Since it is released under MIT license, this file is also MIT licensed.  
 https://github.com/lvgl/lv_binding_micropython/blob/master/driver/generic/st77xx.py  
 https://github.com/lvgl/lv_binding_micropython/blob/master/driver/generic/xpt2046.py  
 
