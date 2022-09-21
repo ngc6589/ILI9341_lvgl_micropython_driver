@@ -133,7 +133,7 @@ class Xpt2046(Xpt2046_hw):
             self.spiPrereadCb()
         # print('.',end='')
         if self.spiRate:
-            self.spi.init(baudrate=1_000_000)
+            self.spi.init(baudrate=48_000_000)
         pos=self.pos()
         if pos is None:
             data.state = 0
@@ -146,7 +146,7 @@ class Xpt2046(Xpt2046_hw):
             
         return False
 
-    def __init__(self, spi, spiRate=24_000_000, spiPrereadCb = None, **kw):
+    def __init__(self, spi, spiRate=1_000_000, spiPrereadCb = None, **kw):
         '''XPT2046 touchscreen driver for LVGL; cf. documentation of :obj:`Xpt2046_hw` for the meaning of parameters being passed.
 
         *spiPrereadCb*: call this before reading from SPI; used to block until DMA transfer is complete (when sharing SPI bus).

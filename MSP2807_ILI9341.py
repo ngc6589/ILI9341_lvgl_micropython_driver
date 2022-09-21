@@ -114,7 +114,7 @@ INV_PORTRAIT = const(2)
 INV_LANDSCAPE = const(3)
 
 class ILIxxxx_hw(object):
-    def __init__(self, *, cs = 9, dc = 8, spi, res=(240,320), bl = 13, rst = 15, rot = PORTRAIT, bgr = False):
+    def __init__(self, *, cs = 9, dc = 8, spi, res=(240,320), bl = 13, rst = 15, rot = PORTRAIT, bgr = False, rp2_dma = None):
         '''
         This is an abstract low-level driver the ST77xx controllers, not to be instantiated directly.
         Derived classes implement chip-specific bits. THe following parameters are recognized:
@@ -153,7 +153,7 @@ class ILIxxxx_hw(object):
         self.res = res
         self.bgr = bgr
         self.spi = spi
-#        self.rp2_dma = rp2_dma
+        self.rp2_dma = rp2_dma
         self.hard_reset()
 
     def off(self):
@@ -209,11 +209,11 @@ class ILIxxxx_hw(object):
         
     def blit(self, x, y, w, h, buf, is_blocking=True):
         self.set_window(x, y, w, h)
-        self.write_register(ILI9341_RAMWR, buf)
-#         if self.rp2_dma:
-#             self._rp2_write_register_dma(ILI9341_RAMWR, buf, is_blocking)
-#         else:
-#             self.write_register(ILI9341_RAMWR, buf)
+        #self.write_register(ILI9341_RAMWR, buf)
+        if self.rp2_dma:
+            self._rp2_write_register_dma(ILI9341_RAMWR, buf, is_blocking=True)
+        else:
+            self.write_register(ILI9341_RAMWR, buf)
 
     def clear(self, color):
         bs = 128 # write pixels in chunks; makes the fill much faster
@@ -240,39 +240,39 @@ class ILIxxxx_hw(object):
             self.spi.write(buf)
         self.cs.value(1)
 
-#     def _rp2_write_register_dma(self, reg, buf, is_blocking=True):
-#         'If *is_blocking* is False, used should call wait_dma explicitly.'
-#         SPI1_BASE = 0x40040000 # FIXME: will be different for another SPI bus?
-#         SSPDR     = 0x008
-#         self.rp2_dma.config(
-#             src_addr  = uctypes.addressof(buf),
-#             dst_addr  = SPI1_BASE + SSPDR,
-#             count     = len(buf),
-#             src_inc   = True,
-#             dst_inc   = False,
-#             trig_dreq = self.rp2_dma.DREQ_SPI1_TX
-#         )
-#         struct.pack_into('B', self.buf1, 0, reg)
-#         self.cs.value(0)
-#         self.dc.value(0)
-#         self.spi.write(self.buf1)
-#         self.dc.value(1)
-#         self.rp2_dma.enable()
-# 
-#         if is_blocking:
-#             self.rp2_wait_dma()
-# 
-#     def rp2_wait_dma(self):
-#         '''
-#         Wait for rp2-port DMA transfer to finish; no-op unless self.rp2_dma is defined.
-#         Can be used as callback before accessing shared SPI bus e.g. with the xpt2046 driver.
-#         '''
-#         if self.rp2_dma is None: return
-#         while self.rp2_dma.is_busy(): pass
-#         self.rp2_dma.disable()
-#         # wait to send last byte. It should take < 1uS @ 10MHz
-#         time.sleep_us(1)
-#         self.cs.value(1)
+    def _rp2_write_register_dma(self, reg, buf, is_blocking=True):
+        'If *is_blocking* is False, used should call wait_dma explicitly.'
+        SPI1_BASE = 0x40040000 # FIXME: will be different for another SPI bus?
+        SSPDR     = 0x008
+        self.rp2_dma.config(
+            src_addr  = uctypes.addressof(buf),
+            dst_addr  = SPI1_BASE + SSPDR,
+            count     = len(buf),
+            src_inc   = True,
+            dst_inc   = False,
+            trig_dreq = self.rp2_dma.DREQ_SPI1_TX
+        )
+        struct.pack_into('B', self.buf1, 0, reg)
+        self.cs.value(0)
+        self.dc.value(0)
+        self.spi.write(self.buf1)
+        self.dc.value(1)
+        self.rp2_dma.enable()
+
+        if is_blocking:
+            self.rp2_wait_dma()
+
+    def rp2_wait_dma(self):
+        '''
+        Wait for rp2-port DMA transfer to finish; no-op unless self.rp2_dma is defined.
+        Can be used as callback before accessing shared SPI bus e.g. with the xpt2046 driver.
+        '''
+        if self.rp2_dma is None: return
+        while self.rp2_dma.is_busy(): pass
+        self.rp2_dma.disable()
+        # wait to send last byte. It should take < 1uS @ 10MHz
+        time.sleep_us(10)
+        self.cs.value(1)
 
     def _run_seq(self,seq):
         '''
@@ -298,6 +298,29 @@ class ILI9341_hw(ILIxxxx_hw):
 
     def config_hw(self):
         init9341 = [
+#             (0x01, None, 100),
+#             (0xCF, bytes([0x00, 0xC1, 0x30])),		# Pwr ctrl B
+#             (0xED, bytes([0x64, 0x03, 0x12, 0x81])),	# Pwr on seq. ctrl
+#             (0xE8, bytes([0x85, 0x00, 0x78])),		# Driver timing ctrl A
+#             (0xCB, bytes([0x39, 0x2C, 0x00, 0x34, 0x02])),	# Pwr ctrl A
+#             (0xF7, bytes([0x20])),				# Pump ratio control
+#             (0xEA, bytes([0x00, 0x00])),			# Driver timing ctrl B
+#             (0xC0, bytes([0x23])),				# Pwr ctrl 1
+#             (0xC1, bytes([0x10])),				# Pwr ctrl 2
+#             (0xC5, bytes([0x3E, 0x28])),			# VCOM ctrl 1
+#             (0xC7, bytes([0x86])),				# VCOM ctrl 2
+#             (ILI9341_MADCTL, bytes([0x00])),
+#             (0x37, bytes([0x00])),				# Vertical scrolling start address
+#             (ILI9341_PIXFMT, bytes([0x55])),
+#             (0xB1, bytes([0x00, 0x18])),			# Frame rate ctrl
+#             (0xB6, bytes([0x08, 0x82, 0x27])),
+#             (0xF2, bytes([0x00])),				# Enable 3 gamma ctrl
+#             (0x26, bytes([0x01])),				# Gamma curve selected
+#             (0xE0, bytes([0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E, 0xF1, 0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00])),
+#             (0xE1, bytes([0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1, 0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F])),
+#             (ILI9341_SLPOUT, None, 100),
+#             (ILI9341_DISPON, None, 100)
+
             (0xEF, bytes([0x03, 0x80, 0x02])),
             (0xCF, bytes([0x00, 0xC1, 0x30])),
             (0xED, bytes([0x64, 0x03, 0x12, 0x81])),
@@ -318,8 +341,8 @@ class ILI9341_hw(ILIxxxx_hw):
             (ILI9341_GAMMASET, bytes([0x01])),			# Gamma curve selected
             (ILI9341_GMCTRP1, bytes([0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E, 0xF1, 0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00])),
             (ILI9341_GMCTRN1, bytes([0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1, 0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F])),
-            (ILI9341_SLPOUT, bytes([0x80])),
-            (ILI9341_DISPON, bytes([0x80]))
+            (ILI9341_SLPOUT, None, 100),
+            (ILI9341_DISPON, None, 100)
             ]
 
         self._run_seq(init9341)
