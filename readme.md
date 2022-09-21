@@ -12,7 +12,7 @@ https://github.com/adafruit/Adafruit_ILI9341/blob/master/Adafruit_ILI9341.cpp
 
 # 制限
 このドライバは http://www.lcdwiki.com/2.8inch_SPI_Module_ILI9341_SKU:MSP2807 LCD Wiki にある、2.8inch SPI Module ILI9341 SKU:MSP2807 という液晶で動作を確認しました。それ以外の液晶で動作するかわかりません。  
-DMA はサポート出来ていません。コメントアウトしてます。
+
 
 
 # ILI9341 Generic Driver for LVGL Micropython
@@ -29,6 +29,6 @@ https://github.com/adafruit/Adafruit_ILI9341/blob/master/Adafruit_ILI9341.cpp
 
 # Limitations
 This driver has been tested with the LCD named 2.8inch SPI Module ILI9341 SKU:MSP2807 from http://www.lcdwiki.com/2.8inch_SPI_Module_ILI9341_SKU:MSP2807 LCD Wiki. I do not know if it works on other LCDs.  
-DMA is not supported. Commented out.
+
 
 Translated with www.DeepL.com/Translator (free version)
