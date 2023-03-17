@@ -144,8 +144,6 @@ class Xpt2046(Xpt2046_hw):
         if self.spiRate:
             self.spi.init(baudrate = self.spiRate)
             
-        return False
-
     def __init__(self, spi, spiRate=1_000_000, spiPrereadCb = None, **kw):
         '''XPT2046 touchscreen driver for LVGL; cf. documentation of :obj:`Xpt2046_hw` for the meaning of parameters being passed.
 
@@ -159,8 +157,6 @@ class Xpt2046(Xpt2046_hw):
         import lvgl as lv
         if not lv.is_initialized(): lv.init()
 
-        self.indev_drv = lv.indev_drv_t()
-        self.indev_drv.init()
-        self.indev_drv.type = lv.INDEV_TYPE.POINTER
-        self.indev_drv.read_cb = self.indev_drv_read_cb
-        self.indev_drv.register()
+        self.indev_drv = lv.indev_create()
+        self.indev_drv.set_type(lv.INDEV_TYPE.POINTER)
+        self.indev_drv.set_read_cb(self.indev_drv_read_cb)

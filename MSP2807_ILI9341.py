@@ -209,7 +209,6 @@ class ILIxxxx_hw(object):
         
     def blit(self, x, y, w, h, buf, is_blocking=True):
         self.set_window(x, y, w, h)
-        #self.write_register(ILI9341_RAMWR, buf)
         if self.rp2_dma:
             self._rp2_write_register_dma(ILI9341_RAMWR, buf, is_blocking=True)
         else:
@@ -298,29 +297,6 @@ class ILI9341_hw(ILIxxxx_hw):
 
     def config_hw(self):
         init9341 = [
-#             (0x01, None, 100),
-#             (0xCF, bytes([0x00, 0xC1, 0x30])),		# Pwr ctrl B
-#             (0xED, bytes([0x64, 0x03, 0x12, 0x81])),	# Pwr on seq. ctrl
-#             (0xE8, bytes([0x85, 0x00, 0x78])),		# Driver timing ctrl A
-#             (0xCB, bytes([0x39, 0x2C, 0x00, 0x34, 0x02])),	# Pwr ctrl A
-#             (0xF7, bytes([0x20])),				# Pump ratio control
-#             (0xEA, bytes([0x00, 0x00])),			# Driver timing ctrl B
-#             (0xC0, bytes([0x23])),				# Pwr ctrl 1
-#             (0xC1, bytes([0x10])),				# Pwr ctrl 2
-#             (0xC5, bytes([0x3E, 0x28])),			# VCOM ctrl 1
-#             (0xC7, bytes([0x86])),				# VCOM ctrl 2
-#             (ILI9341_MADCTL, bytes([0x00])),
-#             (0x37, bytes([0x00])),				# Vertical scrolling start address
-#             (ILI9341_PIXFMT, bytes([0x55])),
-#             (0xB1, bytes([0x00, 0x18])),			# Frame rate ctrl
-#             (0xB6, bytes([0x08, 0x82, 0x27])),
-#             (0xF2, bytes([0x00])),				# Enable 3 gamma ctrl
-#             (0x26, bytes([0x01])),				# Gamma curve selected
-#             (0xE0, bytes([0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E, 0xF1, 0x37, 0x07, 0x10, 0x03, 0x0E, 0x09, 0x00])),
-#             (0xE1, bytes([0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1, 0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F])),
-#             (ILI9341_SLPOUT, None, 100),
-#             (ILI9341_DISPON, None, 100)
-
             (0xEF, bytes([0x03, 0x80, 0x02])),
             (0xCF, bytes([0x00, 0xC1, 0x30])),
             (0xED, bytes([0x64, 0x03, 0x12, 0x81])),
@@ -358,11 +334,12 @@ class ILIxxxx_lvgl(object):
     '''
     def disp_drv_flush_cb(self, disp_drv, area, color):
 #        self.rp2_wait_dma() # wait if not yet done and DMA is being used
+        self.rp2_wait_dma()
         self.blit(area.x1,
                   area.y1,
                   w := (area.x2 - area.x1 + 1),
                   h := (area.y2 - area.y1 + 1),
-                  disp_drv.draw_buf.buf_act.__dereference__(2 * w*h),
+                  disp_drv.draw_buf_act.__dereference__(2 * w * h),
                   is_blocking=False
                   )
         self.disp_drv.flush_ready()
@@ -383,22 +360,10 @@ class ILIxxxx_lvgl(object):
             self.event_loop = lv_utils.event_loop()
 
         # attach all to self to avoid objects' refcount dropping to zero when the scope is exited
-        self.disp_draw_buf = lv.disp_draw_buf_t()
-        if doublebuffer:
-            self.disp_draw_buf.init(fb1 := bytearray(bufSize), bytearray(bufSize), len(fb1) // lv.color_t.__SIZE__)
-        else:
-            self.disp_draw_buf.init(fb1 := bytearray(bufSize), None, len(fb1) // lv.color_t.__SIZE__)
-        self.disp_drv = lv.disp_drv_t()
-        self.disp_drv.init()
-        self.disp_drv.draw_buf = self.disp_draw_buf
-        self.disp_drv.flush_cb = self.disp_drv_flush_cb
-        self.disp_drv.hor_res  = self.width
-        self.disp_drv.ver_res  = self.height
-        if self.bgr:
-            self.disp_drv.color_format = lv.COLOR_FORMAT.NATIVE
-        else:
-            self.disp_drv.color_format = lv.COLOR_FORMAT.NATIVE_REVERSE
-        self.disp_drv.register()
+        self.disp_drv = lv.disp_create(self.width, self.height)
+        self.disp_drv.set_flush_cb(self.disp_drv_flush_cb)
+        self.disp_drv.set_draw_buffers(bytearray(bufSize), bytearray(bufSize) if doublebuffer else None, bufSize, lv.DISP_RENDER_MODE.PARTIAL)
+        self.disp_drv.set_color_format(lv.COLOR_FORMAT.NATIVE if self.bgr else lv.COLOR_FORMAT.NATIVE_REVERSED)
 
 
 class ILI9341(ILI9341_hw, ILIxxxx_lvgl):
