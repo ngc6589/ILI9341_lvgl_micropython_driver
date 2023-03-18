@@ -339,7 +339,7 @@ class ILIxxxx_lvgl(object):
                   area.y1,
                   w := (area.x2 - area.x1 + 1),
                   h := (area.y2 - area.y1 + 1),
-                  disp_drv.draw_buf_act.__dereference__(2 * w * h),
+                  color.__dereference__(2 * w * h),
                   is_blocking=False
                   )
         self.disp_drv.flush_ready()
