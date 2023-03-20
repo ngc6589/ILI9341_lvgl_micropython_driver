@@ -80,9 +80,6 @@ import time
 import machine
 import struct
 import uctypes
-import lvgl as lv
-import lv_utils
-
 from micropython import const
 
 ILI9341_SLPOUT = const(0x11)
@@ -341,12 +338,14 @@ class ILIxxxx_lvgl(object):
                   area.y1,
                   w := (area.x2 - area.x1 + 1),
                   h := (area.y2 - area.y1 + 1),
-                  color.__dereference__(lv.color_t.__SIZE__ * w * h),
+                  color.__dereference__(2 * w * h),
                   is_blocking=False
                   )
         self.disp_drv.flush_ready()
 
     def __init__(self, doublebuffer = True, factor = 4):
+        import lvgl as lv
+        import lv_utils
         if lv.COLOR_DEPTH != 16:
             raise RuntimeError(f'LVGL *must* be compiled with LV_COLOR_DEPTH=16')
         
